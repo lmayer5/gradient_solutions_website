@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="emerald" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martini Golf Tees Canada | Premium Golf Gear</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS & DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a', // Primary Green
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            },
+            daisyui: {
+                themes: ["emerald"],
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-panel {
+                @apply bg-white/10 backdrop-blur-md border border-white/20;
+            }
+        }
+    </style>
+
+    <!-- Alpine.js Initialization (Must be before Alpine loads) -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine Initializing...');
+
+            // CATALOG STORE (Renamed from 'products' to avoid conflict with DOM element id="products")
+            // CATALOG STORE
+            Alpine.store('catalog', {
+                // Retail Only items
+                items: [
+                    {
+                        id: 'r_style1',
+                        name: "Style 1: Original (3.25\")",
+                        price: 16.00, // Display base price, calculation handled in cart
+                        images: ["product_photos/style1_tees.jpg", "product_photos/style1_bag.jpg"],
+                        desc: "5 tees/pack. Classic performance.",
+                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
+                        badge: null
+                    },
+                    {
+                        id: 'r_style2',
+                        name: "Style 2: Step-up (3.25\")",
+                        price: 16.00,
+                        images: ["product_photos/style2_tees.jpg", "product_photos/style2_bag.jpg"],
+                        desc: "5 tees/pack. The one with the stopper for consistent height.",
+                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
+                        badge: "Stopper"
+                    },
+                    {
+                        id: 'r_style3',
+                        name: "Style 3: Mid-size (2.75\")",
+                        price: 16.00,
+                        images: ["product_photos/style3_tees.jpg", "product_photos/style3_bag.jpg"],
+                        desc: "5 tees/pack. Perfect middle ground.",
+                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
+                        badge: null
+                    },
+                    {
+                        id: 'r_style4',
+                        name: "Style 4: Short (2.00\")", // Updated from 1.75? Just keeping ID consistent
+                        price: 16.00,
+                        images: ["product_photos/style4_tees.jpg", "product_photos/style4_bag.jpg"],
+                        desc: "6 tees/pack. Designed for irons and par 3s.",
+                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
+                        badge: null
+                    }
+                ]
+            });
+
+            // CART STORE
+            Alpine.store('cart', {
+                items: [],
+                drawerOpen: false,
+
+                get count() {
+                    return this.items.reduce((acc, item) => acc + item.quantity, 0);
+                },
+
+                // DYNAMIC PRICING LOGIC
+                get subtotal() {
+                    const count = this.count;
+                    if (count === 0) return 0;
+
+                    // Fetch Pricing Strategy from Settings Store
+                    const pricing = Alpine.store('settings').pricing;
+                    if (!pricing) return 0; // Wait for load
+
+                    // Tiers 1-6
+                    if (count <= 6) {
+                        return pricing[count] || (count * 16); // Fallback
+                    } else {
+                        // > 6 Logic: Base of 6 + Extra
+                        return (pricing['6'] || 66) + ((count - 6) * (pricing['extra'] || 11));
+                    }
+                },
+
+                get shipping() {
+                    return 0; // INCLUDED
+                },
+
+                get total() {
+                    return this.subtotal; // Already included
+                },
+
+                add(product) {
+                    const existing = this.items.find(i => i.id === product.id);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        this.items.push({ ...product, quantity: 1 });
+                    }
+                    this.drawerOpen = true; // Auto open on add
+                },
+
+                remove(productId) {
+                    this.items = this.items.filter(i => i.id !== productId);
+                },
+
+                updateQty(productId, amount) {
+                    const item = this.items.find(i => i.id === productId);
+                    if (item) {
+                        item.quantity += amount;
+                        if (item.quantity <= 0) {
+                            this.remove(productId);
+                        }
+                    }
+                },
+
+                clear() {
+                    this.items = [];
+                    // Keep invoiceData briefly if needed, or clear it
+                },
+
+                toggleDrawer() {
+                    this.drawerOpen = !this.drawerOpen;
+                }
+            });
+
+            // CHECKOUT FORM COMPONENT LOGIC
+            Alpine.data('checkoutForm', () => ({
+                formData: {
+                    name: '',
+                    email: '',
+                    address: ''
+                },
+                isSubmitting: false,
+                touched: {
+                    name: false,
+                    email: false,
+                    address: false
+                },
+
+                get isNameValid() { return this.formData.name.trim().length > 0; },
+                get isEmailValid() { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.formData.email); },
+                get isAddressValid() { return this.formData.address.trim().length > 5; },
+                get isValid() { return this.isNameValid && this.isEmailValid && this.isAddressValid && Alpine.store('cart').items.length > 0; },
+
+                submit() {
+                    this.touched.name = true;
+                    this.touched.email = true;
+                    this.touched.address = true;
+
+                    if (!this.isValid) return;
+
+                    this.isSubmitting = true;
+
+                    setTimeout(() => {
+                        const cartStore = Alpine.store('cart');
+                        const payload = {
+                            customer: { ...this.formData },
+                            cart: cartStore.items,
+                            total: cartStore.total,
+                            timestamp: new Date().toISOString()
+                        };
+
+                        const invoiceId = 'INV-' + Math.floor(Math.random() * 100000);
+                        const dateStr = new Date().toLocaleDateString();
+
+                        // GENRATE HTML FOR BLOB (Clean Inline Styles)
+                        const rows = cartStore.items.map(item => `
+                            <tr style="border-bottom: 1px solid #eeeeee;">
+                                <td style="padding: 12px; font-family: sans-serif; color: #000000;">
+                                    <div style="font-weight: bold; color: #000000;">${item.name}</div>
+                                    <div style="font-size: 10px; color: #888888;">#${item.id}</div>
+                                </td>
+                                <td style="padding: 12px; text-align: right; color: #000000; font-family: sans-serif;">$${item.price.toFixed(2)}</td>
+                                <td style="padding: 12px; text-align: center; color: #000000; font-family: sans-serif;">${item.quantity}</td>
+                                <td style="padding: 12px; text-align: right; font-weight: bold; color: #000000; font-family: sans-serif;">$${(item.price * item.quantity).toFixed(2)}</td>
+                            </tr>
+                        `).join('');
+
+                        const invoiceHTML = `
+                            <div style="font-family: sans-serif; background-color: #ffffff; color: #000000; padding: 20px; width: 700px; box-sizing: border-box; margin: 0 auto;">
+                                <!-- Header -->
+                                <div style="display: flex; justify-content: space-between; border-bottom: 4px solid #22c55e; padding-bottom: 30px; margin-bottom: 30px;">
+                                    <div>
+                                        <!-- Clean Header without broken images for PDF safety, just text for now or simple styling -->
+                                        <h1 style="color: #15803d; margin: 0; font-size: 24px; font-weight: bold;">Martini Golf Tees Canada</h1>
+                                        <p style="color: #666666; font-size: 14px; margin-top: 5px;">
+                                            ${Alpine.store('settings').address.replace(/,/g, '<br>')}<br>
+                                            ${Alpine.store('settings').email}<br>
+                                            ${Alpine.store('settings').phone}
+                                        </p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <h2 style="margin: 0; color: #cccccc; letter-spacing: 2px; font-size: 30px; font-weight: bold;">INVOICE</h2>
+                                        <p style="margin: 5px 0 0; color: #000000; font-weight: bold;">${invoiceId}</p>
+                                        <p style="margin: 0; color: #888888;">${dateStr}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Bill To -->
+                                <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #eeeeee;">
+                                    <h3 style="margin: 0 0 10px; font-size: 16px; border-bottom: 1px solid #eeeeee; padding-bottom: 5px; color: #000000; font-weight: bold;">Bill To:</h3>
+                                    <p style="font-weight: bold; margin: 0; font-size: 18px; color: #000000;">${this.formData.name}</p>
+                                    <p style="margin: 0; color: #555555;">${this.formData.email}</p>
+                                    <p style="margin: 5px 0 0; color: #555555;">${this.formData.address}</p>
+                                </div>
+
+                                <!-- Table -->
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                                    <thead>
+                                        <tr style="background-color: #f0fdf4; color: #166534; text-align: left;">
+                                            <th style="padding: 12px; font-weight: bold;">Item</th>
+                                            <th style="padding: 12px; text-align: right; font-weight: bold;">Price</th>
+                                            <th style="padding: 12px; text-align: center; font-weight: bold;">Qty</th>
+                                            <th style="padding: 12px; text-align: right; font-weight: bold;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rows}
+                                    </tbody>
+                                </table>
+
+                                <!-- Totals -->
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <div style="width: 50%;">
+                                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eeeeee;">
+                                        <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 20px;">
+                                            <span style="color: #166534; font-weight: bold;">Total (CAD)</span>
+                                            <span style="color: #16a34a; font-weight: bold;">$${cartStore.total.toFixed(2)}</span>
+                                        </div>
+                                        <div style="text-align: right; color: #999999; font-size: 10px; margin-top: 5px;">* Shipping and Applicable Taxes Included.</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #eeeeee; text-align: center; color: #999999; font-size: 12px;">Thank you for your business!</div>
+                            </div>
+                        `;
+
+
+
+
+
+
+
+
+                        // 1. Create Clean Room Iframe
+                        const iframe = document.createElement('iframe');
+                        iframe.style.visibility = 'hidden';
+                        iframe.style.position = 'fixed';
+                        iframe.style.left = '-9999px';
+                        iframe.style.top = '0';
+                        iframe.style.border = 'none';
+                        document.body.appendChild(iframe);
+
+                        // 2. Define callback for when PDF is ready
+                        window.handlePdfGenerated = (blob) => {
+                            console.log('PDF Generated via Clean Room. Blob size:', blob.size);
+
+                            // Cleanup callback and iframe
+                            delete window.handlePdfGenerated;
+                            if (document.body.contains(iframe)) document.body.removeChild(iframe);
+
+                            const formData = new FormData();
+                            formData.append('customer_name', this.formData.name);
+                            formData.append('customer_email', this.formData.email);
+                            formData.append('order_json', JSON.stringify(payload));
+                            formData.append('invoice_pdf', blob, 'invoice.pdf');
+
+                            console.log('Sending request to process_order.php...');
+
+                            fetch('process_order.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(response => {
+                                    if (response.ok) {
+                                        return response.json().catch(() => ({ status: 'success' }));
+                                    }
+                                    throw new Error('Network response was not ok: ' + response.statusText);
+                                })
+                                .then(data => {
+                                    console.log('Success:', data);
+                                    document.getElementById('order_success_modal').showModal();
+                                    Alpine.store('cart').clear();
+                                    this.formData = { name: '', email: '', address: '' };
+                                    this.touched = { name: false, email: false, address: false };
+                                })
+                                .catch(error => {
+                                    console.error('Submission Error:', error);
+                                    alert('Order Error: ' + error.message);
+                                })
+                                .finally(() => {
+                                    this.isSubmitting = false;
+                                    Alpine.store('cart').drawerOpen = false;
+                                });
+                        };
+
+                        // 3. Construct Clean HTML Document
+                        const cleanHtml = `
+                            <html>
+                            <head>
+                                <style>body { margin: 0; font-family: sans-serif; }</style>
+                                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+                            </head>
+                            <body>
+                                ${invoiceHTML}
+                                <script>
+                                    window.onload = function() {
+                                        const opt = {
+                                            margin: 0.5,
+                                            filename: 'greenfairway-invoice.pdf',
+                                            image: { type: 'jpeg', quality: 0.98 },
+                                            html2canvas: { scale: 2, useCORS: true, logging: true },
+                                            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                                        };
+                                        html2pdf().set(opt).from(document.body).output('blob').then(blob => {
+                                            window.parent.handlePdfGenerated(blob);
+                                        }).catch(err => {
+                                            console.error('Inner PDF Error:', err);
+                                            window.parent.alert('PDF Generation Error (Inner): ' + err.message);
+                                        });
+                                    };
+                                <\/script>
+                            </body>
+                            </html>
+                        `;
+
+                        // 4. Inject Content
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.open();
+                        iframeDoc.write(cleanHtml);
+                        iframeDoc.close();
+
+                        console.log('Clean Room initialized. Waiting for PDF...');
+
+                    }, 500);
+                }
+            }));
+        });
+    </script>
+
+    <!-- Alpine.js Core -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Invoice Print Styles */
+        #invoice-template {
+            width: 800px;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            padding: 40px;
+            display: none;
+            /* Hidden by default */
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            border: 1px solid #ccc;
+            /* Ensure boundaries */
+        }
+
+        /* STRICT Hex colors for PDF generation */
+        #invoice-template * {
+            border-color: #e5e7eb !important;
+            /* gray-200 */
+        }
+
+        #invoice-template .text-brand-700 {
+            color: #15803d !important;
+        }
+
+        #invoice-template .text-brand-600 {
+            color: #16a34a !important;
+        }
+
+        #invoice-template .bg-brand-50 {
+            background-color: #f0fdf4 !important;
+        }
+
+        #invoice-template .text-brand-500 {
+            color: #22c55e !important;
+        }
+
+        #invoice-template .bg-brand-500 {
+            background-color: #22c55e !important;
+        }
+
+        #invoice-template .border-brand-500 {
+            border-color: #22c55e !important;
+        }
+
+        #invoice-template .text-gray-500 {
+            color: #6b7280 !important;
+        }
+
+        #invoice-template .text-gray-700 {
+            color: #374151 !important;
+        }
+
+        #invoice-template .text-gray-200 {
+            color: #e5e7eb !important;
+        }
+
+        #invoice-template .text-gray-400 {
+            color: #9ca3af !important;
+        }
+
+        #invoice-template .text-gray-800 {
+            color: #1f2937 !important;
+        }
+
+        #invoice-template .bg-gray-50 {
+            background-color: #f9fafb !important;
+        }
+
+        /* Helper to ensure text rendering */
+        #invoice-template p,
+        #invoice-template span,
+        #invoice-template h1,
+        #invoice-template h2,
+        #invoice-template h3,
+        #invoice-template td {
+            -webkit-font-smoothing: antialiased;
+            color: inherit;
+        }
+
+        #invoice-template.generating {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -10;
+        }
+    </style>
+</head>
+
+<body x-data
+    class="bg-base-200 min-h-screen flex flex-col font-sans text-base-content selection:bg-brand-500 selection:text-white">
+
+    <!-- DEBUG INDICATOR (Will only show if things are broken) -->
+    <div x-show="!$store.catalog" class="bg-red-500 text-white text-center p-2 font-bold z-[9999]">
+        CRITICAL ERROR: Alpine Store 'catalog' NOT Loaded
+    </div>
+
+    <!-- INVOICE GENERATION LOGIC IS NOW HANDLED VIA JAVASCRIPT IN SUBMIT() -->
+    <!-- This avoids Alpine scope issues and Tailwind 'oklch' color crashes by generating clean HTML on demand. -->
+
+    <!-- DRAWER WRAPPER (For Mobile Cart) -->
+    <div class="drawer drawer-end">
+        <!-- We use $store.cart.drawerOpen to control explicitly via data, but DaisyUI drawer uses a checkbox -->
+        <!-- We bind the checkbox check state to the store -->
+        <input id="cart-drawer" type="checkbox" class="drawer-toggle" :checked="$store.cart.drawerOpen"
+            @change="$store.cart.drawerOpen = $el.checked" />
+
+        <!-- PAGE CONTENT -->
+        <div class="drawer-content flex flex-col">
+
+            <!-- Navbar -->
+            <div class="sticky top-0 z-50 glass-panel shadow-sm">
+                <div class="navbar container mx-auto px-4 py-3">
+                    <div class="flex-1">
+                        <a href="#" class="btn btn-ghost h-auto hover:bg-transparent px-0">
+                            <!-- Logo Image -->
+                            <img src="logo.png" alt="Martini Golf Tees Canada" class="h-12 md:h-14 object-contain" />
+                            <span class="sr-only">Martini Golf Tees Canada</span>
+                        </a>
+                    </div>
+                    <div class="flex-none gap-2">
+                        <!-- Desktop Menu -->
+                        <ul class="menu menu-horizontal px-1 hidden md:flex font-medium text-base-content/70">
+                            <li><a href="#products">Tees</a></li>
+                            <li><a href="#about">About</a></li>
+                        </ul>
+
+                        <!-- Cart Button Mobile -->
+                        <div class="dropdown dropdown-end md:hidden">
+                            <label for="cart-drawer" class="btn btn-ghost btn-circle">
+                                <div class="indicator">
+                                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                                    <span class="badge badge-sm badge-primary indicator-item"
+                                        x-show="$store.cart.count > 0" x-text="$store.cart.count"></span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Desktop Cart Trigger -->
+                        <button class="btn btn-ghost btn-circle hidden md:inline-flex"
+                            onclick="document.getElementById('cart-sidebar-section').scrollIntoView({behavior: 'smooth'})">
+                            <div class="indicator">
+                                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                                <span class="badge badge-sm badge-primary indicator-item" x-show="$store.cart.count > 0"
+                                    x-text="$store.cart.count"></span>
+                            </div>
+                        </button>
+
+                        <!-- Mobile Drawer Toggle is handled by label for checkbox at top -->
+                        <label for="cart-drawer" class="btn btn-ghost btn-circle md:hidden">
+                            <i class="fa-solid fa-bars text-xl"></i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Section -->
+            <div class="hero min-h-[85vh] relative"
+                style="background-image: url('https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?q=80&w=1920&auto=format&fit=crop');">
+                <!-- Darker, richer gradient for premium feel -->
+                <div class="hero-overlay bg-gradient-to-br from-gray-900/90 via-brand-900/80 to-transparent"></div>
+
+                <div class="hero-content text-center text-neutral-content w-full py-20">
+                    <div class="max-w-5xl">
+                        <!-- Premium Badge -->
+                        <div
+                            class="inline-block mb-6 px-4 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur-md text-sm font-medium tracking-wider uppercase text-brand-100 animate-pulse">
+                            Official Martini Golf Tees Canada
+                        </div>
+
+                        <!-- Main Headline with tight leading -->
+                        <h1
+                            class="mb-6 text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight tracking-tight drop-shadow-xl">
+                            Drive Farther.<br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-white">Play
+                                Longer.</span>
+                        </h1>
+
+                        <!-- Subhead -->
+                        <p class="mb-10 text-xl md:text-2xl text-gray-200 max-w-2xl mx-auto font-light leading-relaxed">
+                            Experience the engineered advantage. The only tee proven to give you straighter drives and
+                            last 50x longer than wood.
+                        </p>
+
+                        <!-- CTA Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                            <a href="#products"
+                                class="btn btn-primary border-none bg-brand-600 hover:bg-brand-500 text-white btn-lg rounded-full px-12 shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:shadow-[0_0_40px_rgba(22,163,74,0.6)] hover:-translate-y-1 transition-all duration-300">
+                                Shop Collection
+                            </a>
+                            <a href="#about"
+                                class="btn btn-ghost text-white border-white/30 hover:bg-white/10 btn-lg rounded-full px-8">
+                                Learn More
+                            </a>
+                        </div>
+
+                        <!-- Features Floating Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative z-10">
+                            <!-- Card 1 -->
+                            <div
+                                class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-brand-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-ruler-vertical text-brand-400 text-xl"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-white mb-2">Consistent Height</h3>
+                                <p class="text-sm text-gray-300">3-1/4 inches tall for optimal launch angles with
+                                    today's 460cc drivers.</p>
+                            </div>
+
+                            <!-- Card 2 -->
+                            <div
+                                class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-infinity text-blue-400 text-xl"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-white mb-2">Unmatched Durability</h3>
+                                <p class="text-sm text-gray-300">Proprietary polymer blend. No more carrying a forest of
+                                    wood tees.</p>
+                            </div>
+
+                            <!-- Card 3 -->
+                            <div
+                                class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-rocket text-orange-400 text-xl"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-white mb-2">Proven Distance</h3>
+                                <p class="text-sm text-gray-300">Independent testing confirms: farther and straighter
+                                    drives than wood.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce opacity-70">
+            <i class="fa-solid fa-chevron-down text-white text-xl"></i>
+        </div>
+    </div>
+
+    <!-- Main Layout: Grid vs Sidebar -->
+    <div class="container mx-auto px-4 py-12 flex flex-col lg:flex-row gap-8 relative" id="products">
+
+        <!-- Product Grid (Left/Main) -->
+        <div class="flex-1">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-base-content/90">Our Collection</h2>
+
+                <!-- Toggle Removed - Retail Only Mode -->
+
+
+                <div class="badge badge-outline p-3" x-show="$store.catalog">
+                    Showing <span x-text="$store.catalog.items.length" class="mx-1 font-bold"></span> items
+                </div>
+            </div>
+
+            <!-- Debugging / Fallback -->
+            <div x-show="!$store.catalog || $store.catalog.items.length === 0" class="alert alert-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>No products loaded. Check console for 'Catalog store registered'.</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+                <template x-for="product in $store.catalog.items" :key="product.id">
+                    <div x-data="{ selectedOpt: product.options ? product.options[0] : null, activeImg: product.images[0] }"
+                        class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 group border border-base-200">
+                        <figure
+                            class="relative overflow-hidden h-64 bg-base-200 group-hover:bg-white transition-colors duration-500">
+                            <img :src="activeImg" :alt="product.name"
+                                class="w-full h-full object-contain p-4 transition-all duration-500 transform group-hover:scale-105"
+                                loading="lazy" />
+                            <div x-show="product.badge" class="absolute top-3 right-3 badge badge-secondary shadow-md"
+                                x-text="product.badge"></div>
+
+                            <!-- Image Thumbnails Overlay (Bottom Center) -->
+                            <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-2 p-2">
+                                <template x-for="img in product.images" :key="img">
+                                    <button @click.stop="activeImg = img"
+                                        class="w-8 h-8 rounded-full border-2 overflow-hidden transition-all transform hover:scale-110 shadow-sm"
+                                        :class="activeImg === img ? 'border-brand-500 ring-1 ring-brand-500' : 'border-gray-300 bg-white'">
+                                        <img :src="img" class="w-full h-full object-cover">
+                                    </button>
+                                </template>
+                            </div>
+                        </figure>
+                        <div class="card-body p-6">
+                            <div class="flex justify-between items-start">
+                                <h2 class="card-title text-lg font-bold" x-text="product.name"></h2>
+                                <span class="text-brand-600 font-bold text-lg"
+                                    x-text="'$' + product.price.toFixed(2)"></span>
+                            </div>
+                            <p class="text-sm text-base-content/70 mt-2" x-text="product.desc"></p>
+
+                            <!-- Options Selector -->
+                            <div x-show="product.options" class="mt-4">
+                                <label class="label py-0"><span class="label-text-alt font-semibold">Select
+                                        Color</span></label>
+                                <select x-model="selectedOpt" class="select select-bordered select-sm w-full mt-1">
+                                    <template x-for="opt in product.options" :key="opt">
+                                        <option :value="opt" x-text="opt"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="card-actions justify-end mt-6">
+                                <button @click="$store.cart.add({
+                                            ...product, 
+                                            image: product.images[0], 
+                                            id: selectedOpt ? product.id + '_' + selectedOpt : product.id,
+                                            name: selectedOpt ? product.name + ' (' + selectedOpt + ')' : product.name
+                                        })" class="btn btn-primary btn-sm w-full gap-2 hover:bg-brand-700 text-white">
+                                    <i class="fa-solid fa-plus"></i> Add to Bag
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Desktop Cart Sidebar (Hidden on mobile/tablet, visible on lg) -->
+        <aside class="hidden lg:block w-96 relative" id="cart-sidebar-section">
+            <div class="sticky top-24 space-y-6">
+                <div x-data="checkoutForm" class="bg-base-100 rounded-2xl shadow-xl border border-base-200 p-6">
+
+                    <div class="flex items-center justify-between mb-6 border-b border-base-200 pb-4">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-bag-shopping text-brand-500"></i> Your Cart
+                        </h3>
+                        <span class="badge badge-ghost font-mono" x-text="$store.cart.count + ' items'"></span>
+                    </div>
+
+                    <div x-show="$store.cart.items.length === 0"
+                        class="text-center py-10 flex flex-col items-center text-base-content/50">
+                        <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
+                        <p>Your bag is empty.</p>
+                    </div>
+
+                    <div class="space-y-4 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar"
+                        x-show="$store.cart.items.length > 0">
+                        <template x-for="item in $store.cart.items" :key="item.id">
+                            <div class="flex gap-3 bg-base-50 p-3 rounded-lg border border-base-100 group">
+                                <img :src="item.image" class="w-16 h-16 rounded-md object-cover bg-gray-200" />
+                                <div class="flex-1 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-sm line-clamp-1" x-text="item.name"></h4>
+                                        <button @click="$store.cart.remove(item.id)"
+                                            class="text-error opacity-0 group-hover:opacity-100 transition-opacity text-xs"><i
+                                                class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-1">
+                                        <div
+                                            class="flex items-center gap-2 bg-white rounded-lg border border-base-200 px-1 py-0.5 shadow-sm">
+                                            <button @click="$store.cart.updateQty(item.id, -1)"
+                                                class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-0">-</button>
+                                            <span class="text-xs font-mono w-4 text-center"
+                                                x-text="item.quantity"></span>
+                                            <button @click="$store.cart.updateQty(item.id, 1)"
+                                                class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-0">+</button>
+                                        </div>
+                                        <div class="font-bold text-sm"
+                                            x-text="'$' + (item.price * item.quantity).toFixed(2)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-base-200" x-show="$store.cart.items.length > 0">
+                        <div class="flex justify-between text-sm mb-2 text-base-content/70">
+                            <span>Subtotal (CAD)</span>
+                            <span class="font-bold" x-text="'$' + $store.cart.baseSubtotal.toFixed(2)"></span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-success" x-show="$store.cart.discount > 0">
+                            <span>Bundle Savings</span>
+                            <span class="font-bold" x-text="'-$' + $store.cart.discount.toFixed(2)"></span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-4 text-base-content/70">
+                            <span>Shipping</span>
+                            <span x-show="$store.cart.shipping === 0" class="text-success font-bold">FREE</span>
+                            <span x-show="$store.cart.shipping > 0"
+                                x-text="'$' + $store.cart.shipping.toFixed(2)"></span>
+                        </div>
+
+                        <div class="flex justify-between text-lg font-bold mb-2">
+                            <span>Total (CAD)</span>
+                            <span class="text-brand-600" x-text="'$' + $store.cart.total.toFixed(2)"></span>
+                        </div>
+                        <div class="text-xs text-center text-gray-400 mb-6">
+                            * Applicable taxes extra. Prices in Canadian Dollars.
+                        </div>
+
+                        <form @submit.prevent="submit" class="space-y-4">
+                            <div class="form-control">
+                                <label class="label"><span class="label-text font-medium">Full
+                                        Name</span></label>
+                                <input type="text" x-model="formData.name"
+                                    class="input input-bordered w-full focus:input-primary transition-all"
+                                    :class="{'input-error': touched.name && !isNameValid}" placeholder="Tiger Woods" />
+                                <span x-show="touched.name && !isNameValid" class="text-error text-xs mt-1 ml-1">Name is
+                                    required</span>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label"><span class="label-text font-medium">Email
+                                        Address</span></label>
+                                <input type="email" x-model="formData.email"
+                                    class="input input-bordered w-full focus:input-primary transition-all"
+                                    :class="{'input-error': touched.email && !isEmailValid}"
+                                    placeholder="pro@golf.com" />
+                                <span x-show="touched.email && !isEmailValid" class="text-error text-xs mt-1 ml-1">Valid
+                                    email required</span>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label"><span class="label-text font-medium">Shipping
+                                        Address</span></label>
+                                <textarea x-model="formData.address"
+                                    class="textarea textarea-bordered h-20 focus:textarea-primary transition-all"
+                                    :class="{'textarea-error': touched.address && !isAddressValid}"
+                                    placeholder="123 Fairway Lane, Augusta, GA"></textarea>
+                                <span x-show="touched.address && !isAddressValid"
+                                    class="text-error text-xs mt-1 ml-1">Address is required (>5 chars)</span>
+                            </div>
+
+                            <button type="submit" :disabled="isSubmitting"
+                                class="btn btn-primary w-full text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all mt-2">
+                                <span x-show="isSubmitting" class="loading loading-spinner"></span>
+                                <span x-show="!isSubmitting">Place Order</span>
+                                <i x-show="!isSubmitting" class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <div class="bg-base-100 p-4 rounded-xl border border-base-200 flex justify-around text-center">
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-truck text-brand-500"></i>
+                        <span class="text-xs font-semibold">Fast Shipping</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-brand-500"></i>
+                        <span class="text-xs font-semibold">Secure</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-leaf text-brand-500"></i>
+                        <span class="text-xs font-semibold">Eco</span>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <!-- About Section (Content managed via Admin) -->
+    <div id="about" class="bg-base-200 py-16" x-show="$store.settings.aboutTitle">
+        <div class="container mx-auto px-4 max-w-4xl text-center">
+            <!-- About Section -->
+            <div class="bg-gray-100 py-20 px-4">
+                <div class="container mx-auto max-w-4xl text-center">
+                    <div class="w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <i class="fa-solid fa-martini-glass font-bold text-4xl text-brand-600"></i>
+                    </div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8" x-text="$store.settings.about_title"></h2>
+                    <div class="prose prose-lg mx-auto text-gray-600 whitespace-pre-wrap"
+                        x-text="$store.settings.about_text"></div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div id="faq" class="py-20 px-4 bg-white" x-show="$store.settings.faq && $store.settings.faq.length > 0">
+                <div class="container mx-auto max-w-3xl">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Frequently Asked Questions</h2>
+                    <div class="join join-vertical w-full bg-base-100 border border-base-300 rounded-xl shadow-sm">
+                        <template x-for="(item, index) in $store.settings.faq" :key="index">
+                            <div class="collapse collapse-plus join-item border-b border-base-300 last:border-none">
+                                <input type="radio" name="my-accordion-4" />
+                                <div class="collapse-title text-xl font-medium text-gray-800" x-text="item.question">
+                                </div>
+                                <div class="collapse-content">
+                                    <p class="text-gray-600" x-text="item.answer"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    </div>
+
+    <!-- DRAWER SIDE (Mobile Only Content) -->
+    <div class="drawer-side z-50">
+        <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <div class="p-4 w-80 md:w-96 min-h-full bg-base-100 text-base-content flex flex-col">
+
+            <div class="flex items-center justify-between mb-6 pb-4 border-b">
+                <h3 class="font-bold text-xl">Your Bag</h3>
+                <button class="btn btn-sm btn-circle btn-ghost" @click="$store.cart.drawerOpen = false">✕</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto mb-4" x-show="$store.cart.items.length > 0">
+                <div class="space-y-4">
+                    <template x-for="item in $store.cart.items" :key="item.id">
+                        <div class="flex gap-3 bg-base-50 p-2 rounded-lg border border-base-200">
+                            <img :src="item.image" class="w-16 h-16 rounded object-cover" />
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <p class="font-bold text-sm" x-text="item.name"></p>
+                                    <button @click="$store.cart.remove(item.id)" class="text-error text-xs"><i
+                                            class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="join join-horizontal">
+                                        <button @click="$store.cart.updateQty(item.id, -1)"
+                                            class="join-item btn btn-xs">-</button>
+                                        <button class="join-item btn btn-xs bg-white pointer-events-none"
+                                            x-text="item.quantity"></button>
+                                        <button @click="$store.cart.updateQty(item.id, 1)"
+                                            class="join-item btn btn-xs">+</button>
+                                    </div>
+                                    <span class="font-bold text-sm"
+                                        x-text="'$' + (item.price * item.quantity).toFixed(2)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div x-show="$store.cart.items.length === 0"
+                class="flex-1 flex flex-col items-center justify-center opacity-50">
+                <i class="fa-solid fa-bag-shopping text-6xl mb-4"></i>
+                <p>Bag is empty</p>
+                <button class="btn btn-sm btn-primary mt-4" @click="$store.cart.drawerOpen = false">Start
+                    Shopping</button>
+            </div>
+
+            <div class="mt-auto border-t pt-4" x-show="$store.cart.items.length > 0" x-data="checkoutForm">
+                <div class="flex justify-between font-bold text-lg mb-1">
+                    <span>Total (CAD)</span>
+                    <span x-text="'$' + $store.cart.total.toFixed(2)"></span>
+                </div>
+                <div class="text-xs text-center text-gray-500 mb-4">Shipping & Taxes Included</div>
+
+                <form @submit.prevent="submit" class="space-y-3">
+                    <input type="text" x-model="formData.name" placeholder="Name"
+                        class="input input-sm input-bordered w-full" required
+                        :class="{'input-error': touched.name && !isNameValid}" />
+                    <input type="email" x-model="formData.email" placeholder="Email"
+                        class="input input-sm input-bordered w-full" required
+                        :class="{'input-error': touched.email && !isEmailValid}" />
+                    <textarea x-model="formData.address" placeholder="Address"
+                        class="textarea textarea-sm textarea-bordered w-full" required
+                        :class="{'textarea-error': touched.address && !isAddressValid}"></textarea>
+
+                    <button type="submit" :disabled="isSubmitting" class="btn btn-primary w-full shadow-lg">
+                        <span x-show="isSubmitting" class="loading loading-spinner loading-xs"></span>
+                        Place Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Success Modal -->
+    <dialog id="order_success_modal" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box text-center p-10">
+            <div class="flex justify-center mb-4">
+                <div
+                    class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center text-success text-3xl">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+            <h3 class="font-bold text-2xl text-success">Order Placed!</h3>
+            <p class="py-4 text-base-content/70">Thank you for shopping with Martini Golf Tees Canada. An invoice has
+                been sent to
+                your email.</p>
+            <div class="modal-action justify-center">
+                <form method="dialog">
+                    <button class="btn btn-wide btn-outline">Continue Shopping</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Mix Error Modal -->
+    <dialog id="mix_error_modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg text-error"><i class="fa-solid fa-circle-exclamation mr-2"></i>Order Type
+                Conflict</h3>
+            <p class="py-4">You cannot combine <strong>Wholesale</strong> and <strong>Small Order</strong> items in the
+                same cart.</p>
+            <p class="text-sm">Please complete your current order or clear your cart before switching order types.</p>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-ghost">Cancel</button>
+                    <button class="btn btn-error text-white" @click="Alpine.store('cart').clear()">Clear Cart</button>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- Footer -->
+    <footer class="bg-base-200 text-base-content border-t border-base-300 mt-12">
+        <div class="container mx-auto p-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div>
+                <img src="logo.png" alt="Martini Golf Tees Canada"
+                    class="h-12 object-contain mb-4 mx-auto md:mx-0 opacity-80 mix-blend-multiply" />
+                <p class="text-sm opacity-70">Premium tees for the serious golfer.<br>Proven performance, longer drives.
+                </p>
+            </div>
+            <div>
+                <span class="footer-title opacity-100 text-brand-800">Contact Us</span>
+                <div class="flex flex-col gap-2 mt-2 text-sm" x-data>
+                    <div class="flex items-center gap-2 justify-center md:justify-start">
+                        <i class="fa-solid fa-location-dot text-brand-500 w-4"></i>
+                        <span x-text="$store.settings.address || 'Loading...'"></span>
+                    </div>
+                    <div class="flex items-center gap-2 justify-center md:justify-start">
+                        <i class="fa-solid fa-envelope text-brand-500 w-4"></i>
+                        <span x-text="$store.settings.email || 'Loading...'"></span>
+                    </div>
+                    <div class="flex items-center gap-2 justify-center md:justify-start">
+                        <i class="fa-solid fa-phone text-brand-500 w-4"></i>
+                        <span x-text="$store.settings.phone || 'Loading...'"></span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="footer-title opacity-100 text-brand-800">Legal</span>
+                <a class="link link-hover text-sm">Terms of Service</a>
+                <a class="link link-hover text-sm">Privacy Policy</a>
+                <a class="link link-hover text-sm">Shipping Policy</a>
+            </div>
+        </div>
+        <div class="footer footer-center p-4 bg-base-300 text-base-content text-xs">
+            <div>
+                <p>Copyright © 2025 - All right reserved by Martini Golf Tees Canada</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine Store for Settings -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('settings', {
+                address: '',
+                email: '',
+                phone: '',
+
+                init() {
+                    fetch('get_settings.php')
+                        .then(res => res.json())
+                        .then(data => {
+                            this.address = data.address;
+                            this.email = data.email;
+                            this.phone = data.phone;
+                            this.aboutTitle = data.about_title;
+                            this.about_title = data.about_title; // Duplicate for compatibility if needed
+                            this.aboutText = data.about_text;
+                            this.about_text = data.about_text;   // Duplicate for compatibility if needed
+                            this.faq = data.faq || [];           // Load FAQ
+                            this.pricing = data.pricing; // Load Pricing
+                        })
+                        .catch(err => console.error('Failed to load settings:', err));
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

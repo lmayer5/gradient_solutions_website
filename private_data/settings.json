@@ -1,0 +1,27 @@
+{
+    "address": "10138 Red Pine Road",
+    "email": "bill@stubberfield.ca",
+    "phone": "519-733-2010",
+    "timezone": "America\/Toronto",
+    "about_title": "About Martini Golf Tees",
+    "about_text": "Good day, my name is Bill Stubberfiled, I am the Canadian Distributor of Martini Golf Tees\r\n\r\nSince its introduction at the 2009 PGA Merchandise Show, Martini Golf Tees continues to be one of the fastest growing golf products in North America. This high quality durable golf tee has continued to expand its product lines. It is available in 4 styles and numerous colours. The tee is made from a proprietary polymer resin blend that last longer than traditional wooden tees. The large cup allows you to tilt the ball towards your target line by up to 20%, reducing club-head resistance. Independent laboratory testing has proven that Martini tees give you drives that are both farther and straighter, compared to wooden tees. The 3.25\u201d height is perfect for today\u2019s larger drivers. The large cup head makes placing the ball on the tee easier than traditional tees. \r\n\r\nAlong with the Original 3.25 inch tee, there is a Step-up tee with a shoulder to ensure the same tee height for each of your tee shots. The Short 2 inch tee is intended for teeing iron shots and fairway metals. A 2.75 inch Mid-size tee introduced in 2016 does not fly as far as the original. \r\n\r\nPlease contact me to for wholesale pricing and placing larger orders. \r\n\r\nBill Stubberfield\r\n\r\nCanadian Distributor of Martini Golf Tees",
+    "faq": [
+        {
+            "question": "Do you ship to US?",
+            "answer": "No, Canada only."
+        },
+        {
+            "question": "How does the order and payment process work? ",
+            "answer": "When you place an order on the website, you will be sent a confirmation email with an invoice for your order. This invoice will contain payment instructions for e-transfer. When your order has been shipped, you will receive a confirmation email as well. "
+        }
+    ],
+    "pricing": {
+        "1": 16,
+        "2": 28,
+        "3": 38,
+        "4": 47,
+        "5": 56,
+        "6": 66,
+        "extra": 11
+    }
+}

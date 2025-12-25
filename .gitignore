@@ -1,0 +1,14 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Sensitive Data (Do NOT commit these)
+private_data/orders.json
+private_data/invoices/
+private_data/settings.json
+
+# Local Environment
+.env
+
+# Dependencies
+vendor/

@@ -1,0 +1,14 @@
+# Prevent directory browsing
+Options -Indexes
+
+# Block access to dotfiles (like .git, .env)
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to the vendor directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^vendor/.*$ - [F,L]
+</IfModule>
