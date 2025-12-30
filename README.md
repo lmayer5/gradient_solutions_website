@@ -1,40 +1,86 @@
-# Martini Golf Tees Canada ⛳
+# Gradient Solutions 🎹
 
-A lightweight, high-performance e-commerce site for Martini Golf Tees, built with PHP, Alpine.js, and Tailwind CSS.
+A modern, ultralight e-commerce platform for premium audio plugins and VSTs.
 
-## 📁 Project Structure
+## 🚀 Overview
 
-- **`public_html/`**: The web root. Contains all public-facing files (`index.html`, PHP scripts, assets).
-- **`private_data/`**: (Ignored) Contains sensitive data like `orders.json`, `settings.json`, and generated invoices. **Do not upload this directory to public web access.**
-- **`config.php`**: (Ignored) Contains sensitive credentials (SMTP, Admin Password).
-
-## 🚀 Setup
-
-1. **Dependencies**: Run `composer install` to install PHPMailer and other dependencies.
-2. **Configuration**: 
-   - Rename `config.example.php` (if exists) or create a `config.php` in the root.
-   - Define the following constants:
-     ```php
-     define('ADMIN_PASSWORD', 'your_secure_password');
-     define('SMTP_HOST', 'smtp.hostinger.com');
-     define('SMTP_USER', 'your_email@domain.com');
-     define('SMTP_PASS', 'your_email_password');
-     define('SMTP_PORT', 587);
-     define('SMTP_FROM_EMAIL', 'orders@domain.com');
-     define('SMTP_FROM_NAME', 'Martini Tees Orders');
-     define('ADMIN_EMAIL', 'admin@domain.com');
-     ```
-3. **Deployment**:
-   - Upload the contents of `public_html` to your server's `public_html`.
-   - Create a `private_data` directory *outside* the web root (one level up).
-   - Ensure `private_data` is writable by the web server.
+Gradient Solutions is a boutique audio technology studio offering simple, effective, and modern audio tools for music producers. Features a streamlined checkout with PDF invoice generation and GitHub-based digital delivery.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: HTML5, Tailwind CSS (via CDN), DaisyUI, Alpine.js.
-- **Backend**: PHP 8.x.
-- **Data**: JSON-based flat-file storage (NoSQL/Database-free).
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | HTML5, Tailwind CSS, DaisyUI, Alpine.js |
+| **Backend** | PHP 8.x, PHPMailer |
+| **Persistence** | JSON flat-file storage |
+| **Delivery** | GitHub API (Private Repo Invitations) |
 
-## © Copyright
+## 📁 Project Structure
 
-© 2025 Martini Golf Tees, Inc. | "Martini Golf Tees" is a registered trademark of Martini Golf Tees, Inc.
+```
+.
+├── public_html/          # Web root (point domain here)
+│   ├── index.html        # Main storefront
+│   ├── admin/            # Admin dashboard
+│   ├── process_order.php # Order submission API
+│   └── vendor/           # Composer dependencies
+├── private_data/         # Sensitive data (NOT in Git)
+│   ├── config.php        # Credentials
+│   ├── settings.json     # Site settings
+│   ├── orders.json       # Order database
+│   └── invoices/         # PDF invoices
+└── composer.json         # PHP dependencies
+```
+
+## 💻 Local Development
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/yourusername/gradient-solutions-site.git
+cd gradient-solutions-site
+
+# 2. Install dependencies
+composer install
+
+# 3. Create private_data folder and config
+mkdir private_data
+cp private_data.example/config.php private_data/config.php
+# Edit config.php with your credentials
+
+# 4. Start local server
+php -S localhost:8000 -t public_html
+
+# 5. Open http://localhost:8000
+```
+
+## 🚀 Deployment (Hostinger)
+
+1.  **Upload Files:** Upload entire project to your hosting root.
+2.  **Set Web Root:** Point your domain to `public_html/`.
+3.  **Create `private_data/`:** Manually create folder above `public_html/`.
+4.  **Configure `config.php`:**
+    ```php
+    <?php
+    return [
+        'ADMIN_PASSWORD' => 'your-secure-password',
+        'SMTP_HOST' => 'smtp.hostinger.com',
+        'SMTP_USER' => 'orders@yourdomain.com',
+        'SMTP_PASS' => 'your-email-password',
+        'SMTP_PORT' => 587,
+        'SMTP_FROM_EMAIL' => 'orders@yourdomain.com',
+        'SMTP_FROM_NAME' => 'Gradient Solutions',
+        'ADMIN_EMAIL' => 'admin@yourdomain.com',
+    ];
+    ```
+5.  **Install Composer:** Run `composer install` in root directory.
+6.  **Set Permissions:** `chmod 755 private_data && chmod 644 private_data/*`
+
+## 🔐 Security Notes
+
+-   `private_data/` is excluded from Git and should NEVER be committed.
+-   Admin dashboard is password-protected via session.
+-   SMTP credentials are stored server-side only.
+
+## © License
+
+© 2025 Gradient Solutions. All rights reserved.

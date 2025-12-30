@@ -1,17 +1,48 @@
+# ===========================================
+# Gradient Solutions - Git Ignore Rules
+# ===========================================
 
-# Sensitive Data (Do NOT commit these)
+# ==================
+# SENSITIVE DATA (CRITICAL - Never commit these)
+# ==================
 private_data/
 config.php
-Martini Tees website configuration.txt
+*.env
+.env*
 
-# Local Environment
-.env
-
-# Dependencies
+# ==================
+# Dependencies (Install via composer on server)
+# ==================
 vendor/
 composer.lock
+node_modules/
 
-# System
+# ==================
+# IDE / Editor
+# ==================
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+
+# ==================
+# OS Generated
+# ==================
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.log
+
+# ==================
+# Debug / Temp Files
+# ==================
 error_log
+debug.log
+*.tmp
+*.bak
+
+# ==================
+# Legacy / Deprecated
+# ==================
+Martini Tees website configuration.txt

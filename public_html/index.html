@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="emerald" class="scroll-smooth">
+<html lang="en" data-theme="night" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Martini Golf Tees Canada | Premium Golf Gear</title>
+    <title>Gradient Solutions | Premium Audio Plugins</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,15 +20,20 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a', // Primary Green
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6', // Primary Blue
+                            600: '#2563eb',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        secondary: {
+                            50: '#faf5ff',
+                            500: '#a855f7', // Secondary Purple
+                            900: '#581c87',
                         }
                     },
                     fontFamily: {
@@ -37,7 +42,7 @@
                 }
             },
             daisyui: {
-                themes: ["emerald"],
+                themes: ["night"],
             },
         }
     </script>
@@ -54,46 +59,68 @@
         document.addEventListener('alpine:init', () => {
             console.log('Alpine Initializing...');
 
+            // SETTINGS STORE
+            Alpine.store('settings', {
+                address: '',
+                email: '',
+                phone: '',
+                about_title: '',
+                about_text: '',
+                faq: [],
+                init() {
+                    fetch('get_settings.php')
+                        .then(res => res.json())
+                        .then(data => {
+                            this.address = data.address || '';
+                            this.email = data.email || '';
+                            this.phone = data.phone || '';
+                            this.about_title = data.about_title || '';
+                            this.about_text = data.about_text || '';
+                            this.faq = data.faq || [];
+                        });
+                }
+            });
+
             // CATALOG STORE (Renamed from 'products' to avoid conflict with DOM element id="products")
             // CATALOG STORE
             Alpine.store('catalog', {
-                // Retail Only items
+                // Gradient Solutions Plugin Catalog
                 items: [
                     {
-                        id: 'r_style1',
-                        name: "Style 1: Original (3.25\")",
-                        price: 16.00, // Display base price, calculation handled in cart
-                        images: ["product_photos/style1_tees.jpg", "product_photos/style1_bag.jpg"],
-                        desc: "5 tees/pack. Classic performance.",
-                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
-                        badge: null
+                        id: 'p_rhythm_bass',
+                        name: "rhythm engine",
+                        price: 0.00,
+                        image: "product_photos/rhythm_engine.png",
+                        desc: "Essential rhythm and bass engine for your DAW. Free forever.",
+                        options: ['VST3', 'AU'],
+                        badge: "Free"
                     },
                     {
-                        id: 'r_style2',
-                        name: "Style 2: Step-up (3.25\")",
-                        price: 16.00,
-                        images: ["product_photos/style2_tees.jpg", "product_photos/style2_bag.jpg"],
-                        desc: "5 tees/pack. The one with the stopper for consistent height.",
-                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
-                        badge: "Stopper"
+                        id: 'p_melodic',
+                        name: "melodic engine",
+                        price: 0.00,
+                        image: "product_photos/melody_engine.png",
+                        desc: "Inspiring melodic engine to jumpstart your creativity.",
+                        options: ['VST3', 'AU'],
+                        badge: "Free"
                     },
                     {
-                        id: 'r_style3',
-                        name: "Style 3: Mid-size (2.75\")",
-                        price: 16.00,
-                        images: ["product_photos/style3_tees.jpg", "product_photos/style3_bag.jpg"],
-                        desc: "5 tees/pack. Perfect middle ground.",
-                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
-                        badge: null
+                        id: 'p_stem_gen',
+                        name: "stem generator",
+                        price: 29.00,
+                        image: "product_photos/stem_generator.png",
+                        desc: "High quality stem generator for precise track isolation.",
+                        options: ['VST3', 'AU'],
+                        badge: "Popular"
                     },
                     {
-                        id: 'r_style4',
-                        name: "Style 4: Short (2.00\")", // Updated from 1.75? Just keeping ID consistent
-                        price: 16.00,
-                        images: ["product_photos/style4_tees.jpg", "product_photos/style4_bag.jpg"],
-                        desc: "6 tees/pack. Designed for irons and par 3s.",
-                        options: ['White', 'Yellow', 'Orange', 'Pink', 'Blue', 'Aqua', 'Mixed'],
-                        badge: null
+                        id: 'p_reverse_synth',
+                        name: "reverse synthesis",
+                        price: 99.00,
+                        image: "product_photos/reverse_synthesis.png",
+                        desc: "Advanced reverse synthesis technology for accurate audio reconstruction.",
+                        options: ['VST3', 'AU'],
+                        badge: "Premium"
                     }
                 ]
             });
@@ -107,22 +134,9 @@
                     return this.items.reduce((acc, item) => acc + item.quantity, 0);
                 },
 
-                // DYNAMIC PRICING LOGIC
+                // SIMPLE PRICING LOGIC
                 get subtotal() {
-                    const count = this.count;
-                    if (count === 0) return 0;
-
-                    // Fetch Pricing Strategy from Settings Store
-                    const pricing = Alpine.store('settings').pricing;
-                    if (!pricing) return 0; // Wait for load
-
-                    // Tiers 1-6
-                    if (count <= 6) {
-                        return pricing[count] || (count * 16); // Fallback
-                    } else {
-                        // > 6 Logic: Base of 6 + Extra
-                        return (pricing['6'] || 66) + ((count - 6) * (pricing['extra'] || 11));
-                    }
+                    return this.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
                 },
 
                 get shipping() {
@@ -175,24 +189,28 @@
                 formData: {
                     name: '',
                     email: '',
-                    address: ''
+                    address: '',
+                    github_username: ''
                 },
                 isSubmitting: false,
                 touched: {
                     name: false,
                     email: false,
-                    address: false
+                    address: false,
+                    github_username: false
                 },
 
                 get isNameValid() { return this.formData.name.trim().length > 0; },
                 get isEmailValid() { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.formData.email); },
                 get isAddressValid() { return this.formData.address.trim().length > 5; },
-                get isValid() { return this.isNameValid && this.isEmailValid && this.isAddressValid && Alpine.store('cart').items.length > 0; },
+                get isGithubValid() { return this.formData.github_username.trim().length > 0; },
+                get isValid() { return this.isNameValid && this.isEmailValid && this.isAddressValid && this.isGithubValid && Alpine.store('cart').items.length > 0; },
 
                 submit() {
                     this.touched.name = true;
                     this.touched.email = true;
                     this.touched.address = true;
+                    this.touched.github_username = true;
 
                     if (!this.isValid) return;
 
@@ -226,12 +244,12 @@
                         const invoiceHTML = `
                             <div style="font-family: sans-serif; background-color: #ffffff; color: #000000; padding: 20px; width: 700px; box-sizing: border-box; margin: 0 auto;">
                                 <!-- Header -->
-                                <div style="display: flex; justify-content: space-between; border-bottom: 4px solid #22c55e; padding-bottom: 30px; margin-bottom: 30px;">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 4px solid #4f46e5; padding-bottom: 30px; margin-bottom: 30px;">
                                     <div>
-                                        <!-- Clean Header without broken images for PDF safety, just text for now or simple styling -->
-                                        <h1 style="color: #15803d; margin: 0; font-size: 24px; font-weight: bold;">Martini Golf Tees Canada</h1>
+                                        <!-- Header with Gradient Solutions Branding -->
+                                        <h1 style="color: #3730a3; margin: 0; font-size: 24px; font-weight: bold;">Gradient Solutions</h1>
                                         <p style="color: #666666; font-size: 14px; margin-top: 5px;">
-                                            ${Alpine.store('settings').address.replace(/,/g, '<br>')}<br>
+                                            Luke Mayer - Chief Audio Engineer<br>
                                             ${Alpine.store('settings').email}<br>
                                             ${Alpine.store('settings').phone}
                                         </p>
@@ -254,7 +272,8 @@
                                 <!-- Table -->
                                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                                     <thead>
-                                        <tr style="background-color: #f0fdf4; color: #166534; text-align: left;">
+                                    <thead>
+                                        <tr style="background-color: #eef2ff; color: #3730a3; text-align: left;">
                                             <th style="padding: 12px; font-weight: bold;">Item</th>
                                             <th style="padding: 12px; text-align: right; font-weight: bold;">Price</th>
                                             <th style="padding: 12px; text-align: center; font-weight: bold;">Qty</th>
@@ -279,8 +298,8 @@
 
                                 <!-- Payment Instructions -->
                                 <div style="margin-top: 40px; padding: 20px; background-color: #f0fdf4; border-radius: 8px; text-align: center;">
-                                    <p style="color: #166534; font-weight: bold; margin: 0 0 10px 0;">Payment Instructions</p>
-                                    <p style="color: #374151; font-size: 14px; margin: 0;">Amount payable via e-Transfer to: <strong>bill@stubberfield.ca</strong></p>
+                                    <p style="color: #3730a3; font-weight: bold; margin: 0 0 10px 0;">Payment Instructions</p>
+                                    <p style="color: #374151; font-size: 14px; margin: 0;">Verified Digital Purchase. No further action required.</p>
                                 </div>
 
                                 <!-- Thank You -->
@@ -315,6 +334,7 @@
                             const formData = new FormData();
                             formData.append('customer_name', this.formData.name);
                             formData.append('customer_email', this.formData.email);
+                            formData.append('github_username', this.formData.github_username);
                             formData.append('order_json', JSON.stringify(payload));
                             formData.append('invoice_pdf', blob, 'invoice.pdf');
 
@@ -334,8 +354,8 @@
                                     console.log('Success:', data);
                                     document.getElementById('order_success_modal').showModal();
                                     Alpine.store('cart').clear();
-                                    this.formData = { name: '', email: '', address: '' };
-                                    this.touched = { name: false, email: false, address: false };
+                                    this.formData = { name: '', email: '', address: '', github_username: '' };
+                                    this.touched = { name: false, email: false, address: false, github_username: false };
                                 })
                                 .catch(error => {
                                     console.error('Submission Error:', error);
@@ -360,7 +380,7 @@
                                     window.onload = function() {
                                         const opt = {
                                             margin: 0.5,
-                                            filename: 'greenfairway-invoice.pdf',
+                                            filename: 'gradient-invoice.pdf',
                                             image: { type: 'jpeg', quality: 0.98 },
                                             html2canvas: { scale: 2, useCORS: true, logging: true },
                                             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -400,31 +420,7 @@
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+
     <style>
         [x-cloak] {
             display: none !important;
@@ -456,27 +452,33 @@
         }
 
         #invoice-template .text-brand-700 {
-            color: #15803d !important;
+            color: #1d4ed8 !important;
+            /* Blue-700 */
         }
 
         #invoice-template .text-brand-600 {
-            color: #16a34a !important;
+            color: #2563eb !important;
+            /* Blue-600 */
         }
 
         #invoice-template .bg-brand-50 {
-            background-color: #f0fdf4 !important;
+            background-color: #eff6ff !important;
+            /* Blue-50 */
         }
 
         #invoice-template .text-brand-500 {
-            color: #22c55e !important;
+            color: #3b82f6 !important;
+            /* Blue-500 */
         }
 
         #invoice-template .bg-brand-500 {
-            background-color: #22c55e !important;
+            background-color: #3b82f6 !important;
+            /* Blue-500 */
         }
 
         #invoice-template .border-brand-500 {
-            border-color: #22c55e !important;
+            border-color: #3b82f6 !important;
+            /* Blue-500 */
         }
 
         #invoice-template .text-gray-500 {
@@ -551,15 +553,15 @@
                     <div class="flex-1">
                         <a href="#" class="btn btn-ghost h-auto hover:bg-transparent px-0">
                             <!-- Logo Image -->
-                            <img src="logo.png" alt="Martini Golf Tees Canada" class="h-12 md:h-14 object-contain" />
-                            <span class="sr-only">Martini Golf Tees Canada</span>
+                            <div class="text-3xl font-bold text-brand-500 tracking-tighter lowercase">gradient</div>
+                            <span class="sr-only">gradient solutions</span>
                         </a>
                     </div>
                     <div class="flex-none gap-2">
                         <!-- Desktop Menu -->
                         <ul class="menu menu-horizontal px-1 hidden md:flex font-medium text-base-content/70">
-                            <li><a href="#products">Tees</a></li>
-                            <li><a href="#about">About</a></li>
+                            <li><a href="#products">plugins</a></li>
+                            <li><a href="#about">about</a></li>
                         </ul>
 
                         <!-- Cart Button Mobile -->
@@ -586,41 +588,41 @@
 
             <!-- Hero Section -->
             <div class="hero min-h-[85vh] relative"
-                style="background-image: url('https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?q=80&w=1920&auto=format&fit=crop');">
-                <!-- Darker, richer gradient for premium feel -->
-                <div class="hero-overlay bg-gradient-to-br from-gray-900/90 via-brand-900/80 to-transparent"></div>
+                style="background-image: url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1920&auto=format&fit=crop');">
+                <!-- Darker, richer gradient for premium feel and high contrast -->
+                <div class="hero-overlay bg-gradient-to-br from-black/90 via-gray-900/80 to-brand-900/60"></div>
 
                 <div class="hero-content text-center text-neutral-content w-full py-20">
                     <div class="max-w-5xl">
                         <!-- Premium Badge -->
                         <div
                             class="inline-block mb-6 px-4 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur-md text-sm font-medium tracking-wider uppercase text-brand-100 animate-pulse">
-                            Official Martini Golf Tees Canada
+                            official gradient solutions store
                         </div>
 
                         <!-- Main Headline with tight leading -->
                         <h1
                             class="mb-6 text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight tracking-tight drop-shadow-xl">
-                            Drive Farther.<br>
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-white">Play
-                                Longer.</span>
+                            sculpt your sound.<br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-white">perfect
+                                your mix.</span>
                         </h1>
 
                         <!-- Subhead -->
                         <p class="mb-10 text-xl md:text-2xl text-gray-200 max-w-2xl mx-auto font-light leading-relaxed">
-                            Experience the engineered advantage. The only tee proven to give you straighter drives and
-                            last 50x longer than wood.
+                            premium audio plugins designed for modern producers. experience analog warmth with
+                            digital precision.
                         </p>
 
                         <!-- CTA Buttons -->
                         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
                             <a href="#products"
-                                class="btn btn-primary border-none bg-brand-600 hover:bg-brand-500 text-white btn-lg rounded-full px-12 shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:shadow-[0_0_40px_rgba(22,163,74,0.6)] hover:-translate-y-1 transition-all duration-300">
-                                Shop Collection
+                                class="btn btn-primary border-none bg-brand-600 hover:bg-brand-500 text-white btn-lg rounded-full px-12 shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_40px_rgba(59,130,246,0.6)] hover:-translate-y-1 transition-all duration-300">
+                                shop collection
                             </a>
                             <a href="#about"
                                 class="btn btn-ghost text-white border-white/30 hover:bg-white/10 btn-lg rounded-full px-8">
-                                Learn More
+                                learn more
                             </a>
                         </div>
 
@@ -631,11 +633,11 @@
                                 class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
                                 <div
                                     class="w-12 h-12 rounded-full bg-brand-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-ruler-vertical text-brand-400 text-xl"></i>
+                                    <i class="fa-solid fa-wave-square text-brand-400 text-xl"></i>
                                 </div>
-                                <h3 class="text-lg font-bold text-white mb-2">Consistent Height</h3>
-                                <p class="text-sm text-gray-300">3-1/4 inches tall for optimal launch angles with
-                                    today's 460cc drivers.</p>
+                                <h3 class="text-lg font-bold text-white mb-2">analog warmth</h3>
+                                <p class="text-sm text-gray-300">proprietary modeling technology that captures the soul
+                                    of vintage hardware.</p>
                             </div>
 
                             <!-- Card 2 -->
@@ -643,11 +645,11 @@
                                 class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
                                 <div
                                     class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-infinity text-blue-400 text-xl"></i>
+                                    <i class="fa-solid fa-microchip text-blue-400 text-xl"></i>
                                 </div>
-                                <h3 class="text-lg font-bold text-white mb-2">Unmatched Durability</h3>
-                                <p class="text-sm text-gray-300">Proprietary polymer blend. No more carrying a forest of
-                                    wood tees.</p>
+                                <h3 class="text-lg font-bold text-white mb-2">zero latency</h3>
+                                <p class="text-sm text-gray-300">optimized c++ dsp engines for real-time tracking
+                                    performance.</p>
                             </div>
 
                             <!-- Card 3 -->
@@ -655,11 +657,12 @@
                                 class="group p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all duration-300">
                                 <div
                                     class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-rocket text-orange-400 text-xl"></i>
+                                    <i class="fa-solid fa-sliders text-orange-400 text-xl"></i>
                                 </div>
-                                <h3 class="text-lg font-bold text-white mb-2">Proven Distance</h3>
-                                <p class="text-sm text-gray-300">Independent testing confirms: farther and straighter
-                                    drives than wood.</p>
+                                <h3 class="text-lg font-bold text-white mb-2">professional presets</h3>
+                                <p class="text-sm text-gray-300">signature presets crafted for professional workflows
+                                    included with every
+                                    plugin.</p>
                             </div>
                         </div>
                     </div>
@@ -679,13 +682,13 @@
         <!-- Product Grid (Left/Main) -->
         <div class="flex-1">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-base-content/90">Our Collection</h2>
+                <h2 class="text-3xl font-bold text-base-content/90">our collection</h2>
 
                 <!-- Toggle Removed - Retail Only Mode -->
 
 
                 <div class="badge badge-outline p-3" x-show="$store.catalog">
-                    Showing <span x-text="$store.catalog.items.length" class="mx-1 font-bold"></span> items
+                    showing <span x-text="$store.catalog.items.length" class="mx-1 font-bold"></span> items
                 </div>
             </div>
 
@@ -697,26 +700,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                 <template x-for="product in $store.catalog.items" :key="product.id">
-                    <div x-data="{ selectedOpt: product.options ? product.options[0] : null, activeImg: product.images[0] }"
+                    <div x-data="{ selectedOpt: product.options ? product.options[0] : null }"
                         class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 group border border-base-200">
                         <figure
-                            class="relative overflow-hidden h-64 bg-base-200 group-hover:bg-white transition-colors duration-500">
-                            <img :src="activeImg" :alt="product.name"
+                            class="relative overflow-hidden h-64 bg-base-300 group-hover:bg-base-200 transition-colors duration-500">
+                            <img :src="product.image" :alt="product.name"
                                 class="w-full h-full object-contain p-4 transition-all duration-500 transform group-hover:scale-105"
                                 loading="lazy" />
                             <div x-show="product.badge" class="absolute top-3 right-3 badge badge-secondary shadow-md"
                                 x-text="product.badge"></div>
-
-                            <!-- Image Thumbnails Overlay (Bottom Center) -->
-                            <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-2 p-2">
-                                <template x-for="img in product.images" :key="img">
-                                    <button @click.stop="activeImg = img"
-                                        class="w-8 h-8 rounded-full border-2 overflow-hidden transition-all transform hover:scale-110 shadow-sm"
-                                        :class="activeImg === img ? 'border-brand-500 ring-1 ring-brand-500' : 'border-gray-300 bg-white'">
-                                        <img :src="img" class="w-full h-full object-cover">
-                                    </button>
-                                </template>
-                            </div>
                         </figure>
                         <div class="card-body p-6">
                             <div class="flex justify-between items-start">
@@ -729,7 +721,7 @@
                             <!-- Options Selector -->
                             <div x-show="product.options" class="mt-4">
                                 <label class="label py-0"><span class="label-text-alt font-semibold">Select
-                                        Color</span></label>
+                                        Format</span></label>
                                 <select x-model="selectedOpt" class="select select-bordered select-sm w-full mt-1">
                                     <template x-for="opt in product.options" :key="opt">
                                         <option :value="opt" x-text="opt"></option>
@@ -740,11 +732,11 @@
                             <div class="card-actions justify-end mt-6">
                                 <button @click="$store.cart.add({
                                             ...product, 
-                                            image: product.images[0], 
+                                            // image is already on product, but ensure ID is unique
                                             id: selectedOpt ? product.id + '_' + selectedOpt : product.id,
                                             name: selectedOpt ? product.name + ' (' + selectedOpt + ')' : product.name
                                         })" class="btn btn-primary btn-sm w-full gap-2 hover:bg-brand-700 text-white">
-                                    <i class="fa-solid fa-plus"></i> Add to Bag
+                                    <i class="fa-solid fa-plus"></i> add to cart
                                 </button>
                             </div>
                         </div>
@@ -760,7 +752,7 @@
 
                     <div class="flex items-center justify-between mb-6 border-b border-base-200 pb-4">
                         <h3 class="text-xl font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-bag-shopping text-brand-500"></i> Your Cart
+                            <i class="fa-solid fa-cart-shopping text-brand-500"></i> your cart
                         </h3>
                         <span class="badge badge-ghost font-mono" x-text="$store.cart.count + ' items'"></span>
                     </div>
@@ -768,7 +760,7 @@
                     <div x-show="$store.cart.items.length === 0"
                         class="text-center py-10 flex flex-col items-center text-base-content/50">
                         <i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-20"></i>
-                        <p>Your bag is empty.</p>
+                        <p>your cart is empty.</p>
                     </div>
 
                     <div class="space-y-4 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar"
@@ -803,26 +795,20 @@
 
                     <div class="mt-6 pt-4 border-t border-base-200" x-show="$store.cart.items.length > 0">
                         <div class="flex justify-between text-sm mb-2 text-base-content/70">
-                            <span>Subtotal (CAD)</span>
+                            <span>subtotal (cad)</span>
                             <span class="font-bold" x-text="'$' + $store.cart.baseSubtotal.toFixed(2)"></span>
                         </div>
                         <div class="flex justify-between text-sm mb-2 text-success" x-show="$store.cart.discount > 0">
-                            <span>Bundle Savings</span>
+                            <span>bundle savings</span>
                             <span class="font-bold" x-text="'-$' + $store.cart.discount.toFixed(2)"></span>
-                        </div>
-                        <div class="flex justify-between text-sm mb-4 text-base-content/70">
-                            <span>Shipping</span>
-                            <span x-show="$store.cart.shipping === 0" class="text-success font-bold">FREE</span>
-                            <span x-show="$store.cart.shipping > 0"
-                                x-text="'$' + $store.cart.shipping.toFixed(2)"></span>
                         </div>
 
                         <div class="flex justify-between text-lg font-bold mb-2">
-                            <span>Total (CAD)</span>
+                            <span>total (cad)</span>
                             <span class="text-brand-600" x-text="'$' + $store.cart.total.toFixed(2)"></span>
                         </div>
                         <div class="text-xs text-center text-gray-400 mb-6">
-                            Prices in Canadian Dollars.
+                            prices in canadian dollars.
                         </div>
 
                         <form @submit.prevent="submit" class="space-y-4">
@@ -831,7 +817,7 @@
                                         Name</span></label>
                                 <input type="text" x-model="formData.name"
                                     class="input input-bordered w-full focus:input-primary transition-all"
-                                    :class="{'input-error': touched.name && !isNameValid}" placeholder="Tiger Woods" />
+                                    :class="{'input-error': touched.name && !isNameValid}" placeholder="Hans Zimmer" />
                                 <span x-show="touched.name && !isNameValid" class="text-error text-xs mt-1 ml-1">Name is
                                     required</span>
                             </div>
@@ -842,20 +828,31 @@
                                 <input type="email" x-model="formData.email"
                                     class="input input-bordered w-full focus:input-primary transition-all"
                                     :class="{'input-error': touched.email && !isEmailValid}"
-                                    placeholder="pro@golf.com" />
+                                    placeholder="studio@gradientsolutions.ca" />
                                 <span x-show="touched.email && !isEmailValid" class="text-error text-xs mt-1 ml-1">Valid
                                     email required</span>
                             </div>
 
                             <div class="form-control">
-                                <label class="label"><span class="label-text font-medium">Shipping
+                                <label class="label"><span class="label-text font-medium">Billing
                                         Address</span></label>
                                 <textarea x-model="formData.address"
                                     class="textarea textarea-bordered h-20 focus:textarea-primary transition-all"
                                     :class="{'textarea-error': touched.address && !isAddressValid}"
-                                    placeholder="123 Fairway Lane, Augusta, GA"></textarea>
+                                    placeholder="Studio 42, Music Row, Nashville, TN"></textarea>
                                 <span x-show="touched.address && !isAddressValid"
                                     class="text-error text-xs mt-1 ml-1">Address is required (>5 chars)</span>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label"><span class="label-text font-medium">GitHub
+                                        Username</span></label>
+                                <input type="text" x-model="formData.github_username"
+                                    class="input input-bordered w-full focus:input-primary transition-all"
+                                    :class="{'input-error': touched.github_username && !isGithubValid}"
+                                    placeholder="e.g., hanszimmer-studio" />
+                                <span x-show="touched.github_username && !isGithubValid"
+                                    class="text-error text-xs mt-1 ml-1">GitHub username required for delivery</span>
                             </div>
 
                             <button type="submit" :disabled="isSubmitting"
@@ -871,16 +868,12 @@
 
                 <div class="bg-base-100 p-4 rounded-xl border border-base-200 flex justify-around text-center">
                     <div class="flex flex-col items-center gap-2">
-                        <i class="fa-solid fa-truck text-brand-500"></i>
-                        <span class="text-xs font-semibold">Fast Shipping</span>
+                        <i class="fa-solid fa-bolt text-brand-500"></i>
+                        <span class="text-xs font-semibold">Fast DSP</span>
                     </div>
                     <div class="flex flex-col items-center gap-2">
                         <i class="fa-solid fa-shield-halved text-brand-500"></i>
                         <span class="text-xs font-semibold">Secure</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <i class="fa-solid fa-leaf text-brand-500"></i>
-                        <span class="text-xs font-semibold">Eco</span>
                     </div>
                 </div>
 
@@ -888,33 +881,37 @@
         </aside>
     </div>
 
-    <!-- About Section (Content managed via Admin) -->
-    <div id="about" class="bg-base-200 py-16" x-show="$store.settings.aboutTitle">
-        <div class="container mx-auto px-4 max-w-4xl text-center">
-            <!-- About Section -->
-            <div class="bg-gray-100 py-20 px-4">
-                <div class="container mx-auto max-w-4xl text-center">
-                    <div class="w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <i class="fa-solid fa-martini-glass font-bold text-4xl text-brand-600"></i>
+    <div id="about" class="bg-base-200" x-show="$store.settings.about_title">
+        <div class="container mx-auto px-4 max-w-xl py-24">
+            <!-- About Section Card -->
+            <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl mb-12 animate-fade-in">
+                <div class="p-8 md:p-16 text-center">
+                    <div
+                        class="w-20 h-20 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-8 rotate-3 hover:rotate-0 transition-transform duration-300">
+                        <i class="fa-solid fa-wave-square font-bold text-4xl text-brand-400"></i>
                     </div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8" x-text="$store.settings.about_title"></h2>
-                    <div class="prose prose-lg mx-auto text-gray-600 whitespace-pre-wrap"
+                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight"
+                        x-text="$store.settings.about_title"></h2>
+                    <div class="prose prose-lg prose-invert mx-auto text-gray-300 whitespace-pre-wrap font-light leading-relaxed"
                         x-text="$store.settings.about_text"></div>
                 </div>
             </div>
 
             <!-- FAQ Section -->
-            <div id="faq" class="py-20 px-4 bg-white" x-show="$store.settings.faq && $store.settings.faq.length > 0">
-                <div class="container mx-auto max-w-3xl">
-                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Frequently Asked Questions</h2>
-                    <div class="join join-vertical w-full bg-base-100 border border-base-300 rounded-xl shadow-sm">
+            <div id="faq" class="py-12" x-show="$store.settings.faq && $store.settings.faq.length > 0">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center text-white mb-12 tracking-tight">frequently asked
+                        questions</h2>
+                    <div class="space-y-4">
                         <template x-for="(item, index) in $store.settings.faq" :key="index">
-                            <div class="collapse collapse-plus join-item border-b border-base-300 last:border-none">
-                                <input type="radio" name="my-accordion-4" />
-                                <div class="collapse-title text-xl font-medium text-gray-800" x-text="item.question">
+                            <div
+                                class="collapse collapse-arrow bg-base-300/50 backdrop-blur-sm border border-white/10 rounded-2xl shadow-sm hover:border-brand-500/30 transition-colors">
+                                <input type="radio" name="faq-accordion" />
+                                <div class="collapse-title text-xl font-semibold text-white/90 py-5"
+                                    x-text="item.question">
                                 </div>
-                                <div class="collapse-content">
-                                    <p class="text-gray-600" x-text="item.answer"></p>
+                                <div class="collapse-content px-5 pb-5">
+                                    <p class="text-gray-400 leading-relaxed font-light" x-text="item.answer"></p>
                                 </div>
                             </div>
                         </template>
@@ -931,7 +928,7 @@
         <div class="p-4 w-80 md:w-96 min-h-full bg-base-100 text-base-content flex flex-col">
 
             <div class="flex items-center justify-between mb-6 pb-4 border-b">
-                <h3 class="font-bold text-xl">Your Bag</h3>
+                <h3 class="font-bold text-xl">your bag</h3>
                 <button class="btn btn-sm btn-circle btn-ghost" @click="$store.cart.drawerOpen = false">✕</button>
             </div>
 
@@ -966,18 +963,18 @@
 
             <div x-show="$store.cart.items.length === 0"
                 class="flex-1 flex flex-col items-center justify-center opacity-50">
-                <i class="fa-solid fa-bag-shopping text-6xl mb-4"></i>
-                <p>Bag is empty</p>
-                <button class="btn btn-sm btn-primary mt-4" @click="$store.cart.drawerOpen = false">Start
-                    Shopping</button>
+                <i class="fa-solid fa-cart-shopping text-6xl mb-4"></i>
+                <p>cart is empty</p>
+                <button class="btn btn-sm btn-primary mt-4" @click="$store.cart.drawerOpen = false">start
+                    shopping</button>
             </div>
 
             <div class="mt-auto border-t pt-4" x-show="$store.cart.items.length > 0" x-data="checkoutForm">
                 <div class="flex justify-between font-bold text-lg mb-1">
-                    <span>Total (CAD)</span>
+                    <span>total (cad)</span>
                     <span x-text="'$' + $store.cart.total.toFixed(2)"></span>
                 </div>
-                <div class="text-xs text-center text-gray-500 mb-4">Shipping & Taxes Included</div>
+                <div class="text-xs text-center text-gray-500 mb-4">taxes included</div>
 
                 <form @submit.prevent="submit" class="space-y-3">
                     <input type="text" x-model="formData.name" placeholder="Name"
@@ -986,9 +983,12 @@
                     <input type="email" x-model="formData.email" placeholder="Email"
                         class="input input-sm input-bordered w-full" required
                         :class="{'input-error': touched.email && !isEmailValid}" />
-                    <textarea x-model="formData.address" placeholder="Address"
+                    <textarea x-model="formData.address" placeholder="Billing Address"
                         class="textarea textarea-sm textarea-bordered w-full" required
                         :class="{'textarea-error': touched.address && !isAddressValid}"></textarea>
+                    <input type="text" x-model="formData.github_username" placeholder="GitHub Username"
+                        class="input input-sm input-bordered w-full" required
+                        :class="{'input-error': touched.github_username && !isGithubValid}" />
 
                     <button type="submit" :disabled="isSubmitting" class="btn btn-primary w-full shadow-lg">
                         <span x-show="isSubmitting" class="loading loading-spinner loading-xs"></span>
@@ -1002,33 +1002,31 @@
 
     <!-- Success Modal -->
     <dialog id="order_success_modal" class="modal modal-bottom sm:modal-middle">
-        <div class="modal-box text-center p-10">
-            <div class="flex justify-center mb-4">
-                <div
-                    class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center text-success text-3xl">
-                    <i class="fa-solid fa-check"></i>
+        <div class="modal-box relative bg-base-100 border border-base-200">
+            <label for="order_success_modal" class="btn btn-sm btn-circle absolute right-2 top-2"
+                @click="document.getElementById('order_success_modal').close()">✕</label>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-wave-square font-bold text-4xl text-brand-600"></i>
+                </div>
+                <h3 class="text-lg font-bold text-brand-700">Order Placed Successfully!</h3>
+                <p class="py-4 text-base-content/70">Thank you for shopping with Gradient Solutions. An invoice and your
+                    download links have
+                    been verified and emailed to you.</p>
+                <div class="modal-action justify-center">
+                    <form method="dialog">
+                        <button class="btn btn-wide btn-outline">Continue Shopping</button>
+                    </form>
                 </div>
             </div>
-            <h3 class="font-bold text-2xl text-success">Order Placed!</h3>
-            <p class="py-4 text-base-content/70">Thank you for shopping with Martini Golf Tees Canada. An invoice has
-                been sent to
-                your email.</p>
-            <div class="modal-action justify-center">
-                <form method="dialog">
-                    <button class="btn btn-wide btn-outline">Continue Shopping</button>
-                </form>
-            </div>
-        </div>
     </dialog>
 
     <!-- Mix Error Modal -->
     <dialog id="mix_error_modal" class="modal">
         <div class="modal-box">
-            <h3 class="font-bold text-lg text-error"><i class="fa-solid fa-circle-exclamation mr-2"></i>Order Type
-                Conflict</h3>
-            <p class="py-4">You cannot combine <strong>Wholesale</strong> and <strong>Small Order</strong> items in the
-                same cart.</p>
-            <p class="text-sm">Please complete your current order or clear your cart before switching order types.</p>
+            <h3 class="font-bold text-lg text-error"><i class="fa-solid fa-circle-exclamation mr-2"></i>Cart Error</h3>
+            <p class="py-4">There was an issue with the items in your cart.</p>
+            <p class="text-sm">Please review your selection or clear your cart to start over.</p>
             <div class="modal-action">
                 <form method="dialog">
                     <button class="btn btn-ghost">Cancel</button>
@@ -1044,14 +1042,12 @@
     <!-- Footer -->
     <footer class="bg-base-200 text-base-content border-t border-base-300 mt-12">
         <div class="container mx-auto p-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-            <div>
-                <img src="logo.png" alt="Martini Golf Tees Canada"
-                    class="h-12 object-contain mb-4 mx-auto md:mx-0 opacity-80 mix-blend-multiply" />
-                <p class="text-sm opacity-70">Premium tees for the serious golfer.<br>Proven performance, longer drives.
-                </p>
+            <div class="mb-4 md:mb-0">
+                <div class="text-2xl font-bold text-brand-500 tracking-tighter lowercase">gradient</div>
+                <p class="text-sm text-base-content/60 mt-1">© 2025 gradient solutions.<br>all rights reserved.</p>
             </div>
             <div>
-                <span class="footer-title opacity-100 text-brand-800">Contact Us</span>
+                <span class="footer-title opacity-100 text-brand-800">contact us</span>
                 <div class="flex flex-col gap-2 mt-2 text-sm" x-data>
                     <div class="flex items-center gap-2 justify-center md:justify-start">
                         <i class="fa-solid fa-location-dot text-brand-500 w-4"></i>
@@ -1068,16 +1064,15 @@
                 </div>
             </div>
             <div>
-                <span class="footer-title opacity-100 text-brand-800">Legal</span>
-                <a class="link link-hover text-sm">Terms of Service</a>
-                <a class="link link-hover text-sm">Privacy Policy</a>
-                <a class="link link-hover text-sm">Shipping Policy</a>
+                <span class="footer-title opacity-100 text-brand-800">legal</span>
+                <a class="link link-hover text-sm">terms of service</a>
+                <a class="link link-hover text-sm">privacy policy</a>
+                <a class="link link-hover text-sm">license agreement</a>
             </div>
         </div>
         <div class="footer footer-center p-4 bg-base-300 text-base-content text-xs">
             <div>
-                <p>© 2025 Martini Golf Tees, Inc. | "Martini Golf Tees" is a registered trademark of Martini Golf Tees,
-                    Inc.</p>
+                <p>© 2025 gradient solutions. all rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -1086,25 +1081,35 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.store('settings', {
-                address: '',
-                email: '',
-                phone: '',
+                address: '123 tech avenue, toronto, on',
+                email: 'hello@gradientsolutions.ca',
+                phone: '416-555-0199',
+                about_title: 'about gradient solutions',
+                about_text: 'we create industry-leading audio plugins for music producers and sound engineers. our mission is to simplify your workflow while delivering analog-quality sound.',
+                pricing: {
+                    "1": 49, "2": 89, "3": 129, "4": 159, "5": 189, "6": 219, "extra": 30
+                },
+
+                // Compatibility mapping
+                get aboutTitle() { return this.about_title; },
+                get aboutText() { return this.about_text; },
 
                 init() {
+                    // Try to fetch latest from server, but defaults will show if this fails (e.g. running locally without server)
                     fetch('get_settings.php')
                         .then(res => res.json())
                         .then(data => {
                             this.address = data.address;
                             this.email = data.email;
                             this.phone = data.phone;
-                            this.aboutTitle = data.about_title;
-                            this.about_title = data.about_title; // Duplicate for compatibility if needed
-                            this.aboutText = data.about_text;
-                            this.about_text = data.about_text;   // Duplicate for compatibility if needed
-                            this.faq = data.faq || [];           // Load FAQ
-                            this.pricing = data.pricing; // Load Pricing
+                            this.about_title = data.about_title;
+                            this.about_text = data.about_text;
+                            this.faq = data.faq || [];
+                            this.pricing = data.pricing;
                         })
-                        .catch(err => console.error('Failed to load settings:', err));
+                        .catch(err => {
+                            console.log('Using default settings (offline/local mode)');
+                        });
                 }
             });
         });

@@ -17,14 +17,19 @@ if (file_exists($settingsFile)) {
 } else {
     // Default fallback if file missing
     echo json_encode([
-        "address" => "10138 Red Pine Road",
-        "email" => "bill@stubberfield.ca",
-        "phone" => "519-733-2010",
+        "address" => "123 tech avenue, toronto, on",
+        "email" => "hello@gradientsolutions.ca",
+        "phone" => "416-555-0199",
         "timezone" => "America/Toronto",
-        "about_title" => "About Martini Golf Tees",
-        "about_text" => "We are a Canadian distributor dedicated to providing the best golf tees on the market. Martini Tees are durable, consistent, and proven to help you drive farther.",
+        "about_title" => "about gradient solutions",
+        "about_text" => "gradient solutions is a boutique audio technology studio owned and operated by luke mayer, our chief audio engineer. we focus on creating high-performance vst3 and au plugins with clinical precision and musical character. as a sole proprietorship, we provide a direct and personal connection to the tools you use. payments are processed securely via e-transfer; once received, you will be invited to a private github repository for instant digital delivery of your plugins.",
+        "faq" => [
+            ["question" => "how do i get my plugins?", "answer" => "after your e-transfer payment is confirmed, you will receive an automated invitation to a private github repository containing your downloads."],
+            ["question" => "which daws are supported?", "answer" => "our plugins are compatible with major daws supporting vst3 or au formats, including ableton live, fl studio, and logic pro."],
+            ["question" => "do you offer refunds?", "answer" => "due to the digital nature of our products, all sales are final. we encourage you to try our free rhythm engine before purchasing."]
+        ],
         "pricing" => [
-            "1" => 16, "2" => 28, "3" => 38, "4" => 47, "5" => 56, "6" => 66, "extra" => 11
+            "individual" => 49
         ]
     ]);
 }
