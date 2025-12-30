@@ -2,19 +2,19 @@
 session_start();
 
 // Configuration
-require_once 'env_loader.php';
+require_once '../env_loader.php';
 
 $password = get_config('ADMIN_PASSWORD');
 if (!$password) {
     die("Configuration Error: Admin password not set in environment. Please check your Hostinger 'Environment Variables' or create a 'private_data/config.php' file.");
 }
 // SECURE PATH: Move out of public_html
-$ordersFile = __DIR__ . '/../private_data/orders.json';
+$ordersFile = __DIR__ . '/../../private_data/orders.json';
 
 // Handle Logout
 if (isset($_GET['logout'])) {
     session_destroy();
-    header('Location: admin.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -22,7 +22,7 @@ if (isset($_GET['logout'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
     if ($_POST['password'] === $password) {
         $_SESSION['logged_in'] = true;
-        header('Location: admin.php');
+        header('Location: index.php');
         exit;
     } else {
         $error = "Incorrect password.";
@@ -74,7 +74,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 // Try internal first for local dev, then external for prod
 $settingsFile = __DIR__ . '/private_data/settings.json';
 if (!file_exists($settingsFile)) {
-    $settingsFile = __DIR__ . '/../private_data/settings.json';
+$settingsFile = __DIR__ . '/../private_data/settings.json';
+if (!file_exists($settingsFile)) {
+    $settingsFile = __DIR__ . '/../../private_data/settings.json';
 }
 
 // HANDLE CLEAR ORDERS
