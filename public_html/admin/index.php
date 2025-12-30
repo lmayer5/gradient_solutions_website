@@ -75,8 +75,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $settingsFile = __DIR__ . '/private_data/settings.json';
 if (!file_exists($settingsFile)) {
 $settingsFile = __DIR__ . '/../private_data/settings.json';
-if (!file_exists($settingsFile)) {
-    $settingsFile = __DIR__ . '/../../private_data/settings.json';
+    if (!file_exists($settingsFile)) {
+        $settingsFile = __DIR__ . '/../../private_data/settings.json';
+    }
 }
 
 // HANDLE CLEAR ORDERS
