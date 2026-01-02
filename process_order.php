@@ -146,7 +146,7 @@ try {
     $emailWarning = null;
     
     try {
-        if (get_config('SMTP_USER') === false) {
+        if (!get_config('SMTP_USER')) {
             $emailWarning = "SMTP not configured.";
         } else {
             $mail = new PHPMailer(true);

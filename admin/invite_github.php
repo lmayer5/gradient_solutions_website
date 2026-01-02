@@ -37,7 +37,12 @@ try {
     }
 
     // 1. Load Credentials
-    $privateDataDir = realpath(__DIR__ . '/../../private_data') ?: (__DIR__ . '/../../private_data');
+    // Flattened structure: admin/ -> ../private_data
+    $privateDataDir = realpath(__DIR__ . '/../private_data');
+    if (!$privateDataDir || !is_dir($privateDataDir)) {
+         // Fallback logic if needed, but ../private_data should work for root-level dir
+         $privateDataDir = __DIR__ . '/../private_data';
+    }
     $settingsFile = $privateDataDir . '/settings.json';
     $settings = [];
     if (file_exists($settingsFile)) {

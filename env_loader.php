@@ -37,8 +37,10 @@ function get_config($key) {
         }
 
         if (file_exists($configPath)) {
+            // error_log("env_loader: Loading config from $configPath");
             $fileConfig = include($configPath);
         } else {
+            // error_log("env_loader: Config file not found at $configPath");
             $fileConfig = [];
         }
     }
