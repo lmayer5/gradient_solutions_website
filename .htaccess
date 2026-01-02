@@ -1,5 +1,6 @@
 # Prevent directory browsing
 Options -Indexes
+DirectoryIndex index.html index.php
 
 # Block access to dotfiles (like .git, .env)
 <FilesMatch "^\.">
