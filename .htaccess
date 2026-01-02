@@ -12,4 +12,7 @@ DirectoryIndex index.html index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^vendor/.*$ - [F,L]
+    
+    # FORCE ROOT TO INDEX.HTML (Fix for stubborn 403s)
+    RewriteRule ^$ index.html [L]
 </IfModule>
