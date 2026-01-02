@@ -19,10 +19,16 @@ if (!$password) {
 }
 
 // DATA PATHS - Use strict paths confirmed by debug.php
-// Debug result said: /home/.../private_data/orders.json
+// Server layout: admin/ -> ../../private_data
 $privateDataDir = realpath(__DIR__ . '/../../private_data');
+
+if (!$privateDataDir || !is_dir($privateDataDir)) {
+    // Local/Flat layout: admin/ -> ../private_data
+    $privateDataDir = realpath(__DIR__ . '/../private_data');
+}
+
 if (!$privateDataDir) {
-    // Fallback if realpath fails (e.g. perms), though debug said it's there
+    // Fallback: non-realpath check
     $privateDataDir = __DIR__ . '/../../private_data';
 }
 

@@ -77,7 +77,13 @@ try {
     }
 
     // 2. Save Order to persistent storage
-    $ordersFile = __DIR__ . '/../private_data/orders.json';
+    $privateDataDir = __DIR__ . '/../private_data';
+    if (!is_dir($privateDataDir)) {
+        // Fallback for flat structure/local dev where private_data is sibling
+        $privateDataDir = __DIR__ . '/private_data';
+    }
+    
+    $ordersFile = $privateDataDir . '/orders.json';
     $currentOrders = [];
 
     if (file_exists($ordersFile)) {
@@ -99,7 +105,7 @@ try {
     $currentOrders[] = $newOrder;
 
     // Save PDF
-    $invoicesDir = __DIR__ . '/../private_data/invoices';
+    $invoicesDir = $privateDataDir . '/invoices';
     if (!is_dir($invoicesDir)) {
         if (!mkdir($invoicesDir, 0755, true)) {
             error_log("Failed to create invoices directory: $invoicesDir");
