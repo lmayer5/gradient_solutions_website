@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gradient Sound | Premium Audio Plugins</title>
+    <meta name="description"
+        content="Premium audio plugins for modern producers. Experience analog warmth with digital precision. Free and paid VST3/AU plugins for your DAW.">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,29 +61,6 @@
         document.addEventListener('alpine:init', () => {
             console.log('Alpine Initializing...');
 
-            // SETTINGS STORE
-            Alpine.store('settings', {
-                address: '',
-                email: '',
-                phone: '',
-                about_title: '',
-                about_text: '',
-                faq: [],
-                init() {
-                    fetch('get_settings.php')
-                        .then(res => res.json())
-                        .then(data => {
-                            this.address = data.address || '';
-                            this.email = data.email || '';
-                            this.phone = data.phone || '';
-                            this.about_title = data.about_title || '';
-                            this.about_text = data.about_text || '';
-                            this.faq = data.faq || [];
-                        });
-                }
-            });
-
-            // CATALOG STORE (Renamed from 'products' to avoid conflict with DOM element id="products")
             // CATALOG STORE
             Alpine.store('catalog', {
                 // Gradient Sound Plugin Catalog
@@ -157,6 +136,14 @@
                 // SIMPLE PRICING LOGIC
                 get subtotal() {
                     return this.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                },
+
+                get baseSubtotal() {
+                    return this.subtotal;
+                },
+
+                get discount() {
+                    return 0; // No discount logic currently
                 },
 
                 get shipping() {
@@ -291,7 +278,6 @@
 
                                 <!-- Table -->
                                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                                    <thead>
                                     <thead>
                                         <tr style="background-color: #eef2ff; color: #3730a3; text-align: left;">
                                             <th style="padding: 12px; font-weight: bold;">Item</th>
@@ -1226,7 +1212,7 @@
         <div class="container mx-auto p-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div class="mb-4 md:mb-0">
                 <div class="text-2xl font-bold text-brand-500 tracking-tighter lowercase">gradient</div>
-                <p class="text-sm text-base-content/60 mt-1">© 2025 gradient sound.<br>all rights reserved.</p>
+                <p class="text-sm text-base-content/60 mt-1">© 2026 gradient sound.<br>all rights reserved.</p>
             </div>
             <div>
                 <span class="footer-title opacity-100 text-brand-800">contact us</span>
@@ -1247,14 +1233,14 @@
             </div>
             <div>
                 <span class="footer-title opacity-100 text-brand-800">legal</span>
-                <a class="link link-hover text-sm">terms of service</a>
-                <a class="link link-hover text-sm">privacy policy</a>
-                <a class="link link-hover text-sm">license agreement</a>
+                <a href="#" class="link link-hover text-sm">terms of service</a>
+                <a href="#" class="link link-hover text-sm">privacy policy</a>
+                <a href="#" class="link link-hover text-sm">license agreement</a>
             </div>
         </div>
         <div class="footer footer-center p-4 bg-base-300 text-base-content text-xs">
             <div>
-                <p>© 2025 gradient sound. all rights reserved.</p>
+                <p>© 2026 gradient sound. all rights reserved.</p>
             </div>
         </div>
     </footer>
