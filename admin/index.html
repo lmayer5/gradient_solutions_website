@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gradient Sound</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="card w-full max-w-md bg-base-100 shadow-2xl">
+        <div class="card-body text-center">
+            <div class="w-16 h-16 rounded-full bg-warning/20 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-server text-warning text-2xl"></i>
+            </div>
+            <h2 class="card-title justify-center text-2xl mb-2">PHP Server Required</h2>
+            <p class="text-base-content/70 mb-6">
+                The admin dashboard requires a PHP server to run. You're currently viewing this page directly in the
+                browser.
+            </p>
+
+            <div class="bg-base-200 rounded-lg p-4 text-left mb-6">
+                <p class="text-sm font-bold mb-2 text-primary">To start the admin panel:</p>
+                <ol class="text-sm text-base-content/80 space-y-2 list-decimal list-inside">
+                    <li>Run <code class="bg-base-300 px-1 rounded">preview.bat</code> from the project folder</li>
+                    <li>Or start a PHP server manually:
+                        <code class="block bg-base-300 px-2 py-1 rounded mt-1 text-xs">php -S localhost:8000</code>
+                    </li>
+                    <li>Then visit <a href="http://localhost:8000/admin/"
+                            class="link link-primary">localhost:8000/admin/</a></li>
+                </ol>
+            </div>
+
+            <div class="card-actions justify-center">
+                <a href="../index.html" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Store
+                </a>
+                <a href="http://localhost:8000/admin/" class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-external-link mr-2"></i> Try localhost:8000
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect to PHP version if we're on a server (not file://)
+        // This page should only show when opening locally without a server
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            // We're on a server, redirect to PHP version immediately
+            window.location.replace('index.php');
+        }
+    </script>
+</body>
+
+</html>

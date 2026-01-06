@@ -23,6 +23,7 @@ if (file_exists($settingsFile)) {
         "timezone" => "America/Toronto",
         "about_title" => "about gradient sound",
         "about_text" => "gradient sound is a boutique audio technology studio owned and operated by luke mayer, our chief audio engineer. we focus on creating high-performance vst3 and au plugins with clinical precision and musical character. as a sole proprietorship, we provide a direct and personal connection to the tools you use. payments are processed securely via e-transfer; once received, you will be invited to a private github repository for instant digital delivery of your plugins.",
+        "western_university_text" => "Welcome to Western University information section. Edit this text in the admin panel.",
         "faq" => [
             ["question" => "how do i get my plugins?", "answer" => "after your e-transfer payment is confirmed, you will receive an automated invitation to a private github repository containing your downloads."],
             ["question" => "which daws are supported?", "answer" => "our plugins are compatible with major daws supporting vst3 or au formats, including ableton live, fl studio, and logic pro."],

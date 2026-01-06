@@ -66,18 +66,22 @@
                 phone: '',
                 about_title: '',
                 about_text: '',
+                western_university_text: '',
                 faq: [],
-                init() {
-                    fetch('get_settings.php')
-                        .then(res => res.json())
-                        .then(data => {
-                            this.address = data.address || '';
-                            this.email = data.email || '';
-                            this.phone = data.phone || '';
-                            this.about_title = data.about_title || '';
-                            this.about_text = data.about_text || '';
-                            this.faq = data.faq || [];
-                        });
+                async init() {
+                    try {
+                        const response = await fetch('get_settings.php');
+                        const data = await response.json();
+                        this.address = data.address || '';
+                        this.email = data.email || '';
+                        this.phone = data.phone || '';
+                        this.about_title = data.about_title || '';
+                        this.about_text = data.about_text || '';
+                        this.western_university_text = data.western_university_text || '';
+                        this.faq = data.faq || [];
+                    } catch (e) {
+                        console.error('Failed to load settings:', e);
+                    }
                 }
             });
 
@@ -584,6 +588,8 @@
                         <ul class="menu menu-horizontal px-1 hidden md:flex font-medium text-base-content/70">
                             <li><a href="#products">plugins</a></li>
                             <li><a href="#about">about</a></li>
+                            <li><a onclick="document.getElementById('western_university_modal').showModal()"
+                                    class="cursor-pointer">western</a></li>
                         </ul>
 
                         <!-- Cart Button Mobile -->
@@ -1163,16 +1169,18 @@
                 <!-- User Info Form -->
                 <div class="space-y-3 mb-4 text-left">
                     <div class="form-control">
-                        <input type="text" x-model="formData.name" placeholder="Your Name" 
+                        <input type="text" x-model="formData.name" placeholder="Your Name"
                             class="input input-bordered w-full focus:input-success"
                             :class="{'input-error': touched.name && !isNameValid}" />
-                        <span x-show="touched.name && !isNameValid" class="text-error text-xs mt-1 ml-1">Name is required</span>
+                        <span x-show="touched.name && !isNameValid" class="text-error text-xs mt-1 ml-1">Name is
+                            required</span>
                     </div>
                     <div class="form-control">
-                        <input type="email" x-model="formData.email" placeholder="your@email.com" 
+                        <input type="email" x-model="formData.email" placeholder="your@email.com"
                             class="input input-bordered w-full focus:input-success"
                             :class="{'input-error': touched.email && !isEmailValid}" />
-                        <span x-show="touched.email && !isEmailValid" class="text-error text-xs mt-1 ml-1">Valid email required</span>
+                        <span x-show="touched.email && !isEmailValid" class="text-error text-xs mt-1 ml-1">Valid email
+                            required</span>
                     </div>
                 </div>
 
@@ -1194,7 +1202,8 @@
                         <i x-show="!isSubmitting" class="fa-solid fa-download"></i>
                         <span x-text="isSubmitting ? 'Processing...' : 'Download ' + selectedFormat"></span>
                     </button>
-                    <p class="text-xs text-base-content/50 mt-2">Free forever. We'll send you updates on new plugins.</p>
+                    <p class="text-xs text-base-content/50 mt-2">Free forever. We'll send you updates on new plugins.
+                    </p>
                 </div>
             </div>
         </div>
@@ -1250,6 +1259,7 @@
                 phone: '416-555-0199',
                 about_title: 'about gradient sound',
                 about_text: 'we create industry-leading audio plugins for music producers and sound engineers. our mission is to simplify your workflow while delivering analog-quality sound.',
+                western_university_text: 'Welcome to Western University information section. Edit this text in the admin panel.',
                 pricing: {
                     "1": 49, "2": 89, "3": 129, "4": 159, "5": 189, "6": 219, "extra": 30
                 },
@@ -1268,6 +1278,7 @@
                             this.phone = data.phone;
                             this.about_title = data.about_title;
                             this.about_text = data.about_text;
+                            this.western_university_text = data.western_university_text || '';
                             this.faq = data.faq || [];
                             this.pricing = data.pricing;
                         })
@@ -1278,6 +1289,35 @@
             });
         });
     </script>
+
+
+    <!-- Western University Modal -->
+    <dialog id="western_university_modal" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box bg-base-100 shadow-2xl border border-base-200">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-university text-purple-500 text-xl"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-base-content">Western University</h3>
+            </div>
+            <div class="py-4">
+                <p class="text-base-content/80 leading-relaxed whitespace-pre-wrap"
+                    x-text="$store.settings.western_university_text || 'Information about Western University will appear here.'">
+                </p>
+            </div>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-primary">Close</button>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
 
 </body>
 
