@@ -1,12 +1,2 @@
 # Admin folder - prioritize PHP over HTML
 DirectoryIndex index.php index.html
-
-# Ensure PHP files are served correctly
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    
-    # If accessing the directory root and index.php exists, use it
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteCond %{REQUEST_FILENAME}/index.php -f
-    RewriteRule ^$ index.php [L]
-</IfModule>
